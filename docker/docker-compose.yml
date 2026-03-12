@@ -1,0 +1,44 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+# Botlixio — Development Docker Compose
+# Starts: PostgreSQL 16 + Redis 7
+# The backend and frontend run locally (outside Docker in dev)
+# ─────────────────────────────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: botlixio_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: botlixio
+      POSTGRES_PASSWORD: botlixio
+      POSTGRES_DB: botlixio
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U botlixio -d botlixio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: botlixio_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

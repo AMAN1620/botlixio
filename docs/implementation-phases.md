@@ -8,14 +8,14 @@ Phased build plan for the Botlixio v2 rebuild. Each phase builds on completed pr
 
 **Goal**: Set up the monorepo, Docker Compose, and testing infrastructure.
 
-- [ ] Create monorepo structure (`backend/`, `frontend/`, `docker/`, `docs/`)
-- [ ] Backend: `pyproject.toml`, `app/__init__.py`, `app/main.py` (empty FastAPI app)
-- [ ] Backend: `pytest` + `pytest-asyncio` configured in `pyproject.toml`
-- [ ] Backend: `tests/conftest.py` with basic fixtures
-- [ ] Docker: `docker-compose.yml` for PostgreSQL + Redis (dev)
-- [ ] Backend: `.env.example` with all environment variables
-- [ ] Frontend: `npx create-next-app` with TypeScript + Tailwind CSS
-- [ ] Git: `.gitignore`, initial commit
+- [x] Create monorepo structure (`backend/`, `frontend/`, `docker/`, `docs/`)
+- [x] Backend: `pyproject.toml`, `app/__init__.py`, `app/main.py` (empty FastAPI app)
+- [x] Backend: `pytest` + `pytest-asyncio` configured in `pyproject.toml`
+- [x] Backend: `tests/conftest.py` with basic fixtures
+- [x] Docker: `docker-compose.yml` for PostgreSQL + Redis (dev)
+- [x] Backend: `.env.example` with all environment variables
+- [x] Frontend: `npx create-next-app` with TypeScript + Tailwind CSS
+- [x] Git: `.gitignore`, initial commit
 
 **Done when**: `pytest` runs with 0 tests found, `docker compose up` starts PostgreSQL + Redis, `npm run dev` serves Next.js.
 

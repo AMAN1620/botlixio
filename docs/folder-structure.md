@@ -139,67 +139,72 @@ botlixio-v2/
 │   └── .env.example
 │
 ├── frontend/                              # Next.js 16 + React 19 + TypeScript
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── layout.tsx                 # Root layout (fonts, providers)
-│   │   │   ├── page.tsx                   # Landing page
-│   │   │   ├── globals.css
-│   │   │   │
-│   │   │   ├── (auth)/                    # Auth pages (no sidebar)
-│   │   │   │   ├── layout.tsx             # Centered card layout
-│   │   │   │   ├── login/page.tsx
-│   │   │   │   ├── register/page.tsx
-│   │   │   │   ├── verify-email/page.tsx
-│   │   │   │   └── forgot-password/page.tsx
-│   │   │   │
-│   │   │   └── (dashboard)/              # Protected pages (with sidebar)
-│   │   │       ├── layout.tsx             # Sidebar + Topbar shell
-│   │   │       ├── dashboard/page.tsx     # Stats cards, recent agents
-│   │   │       ├── agents/
-│   │   │       │   ├── page.tsx           # Agent list with status toggles
-│   │   │       │   ├── new/page.tsx       # Agent creation wizard
-│   │   │       │   └── [id]/
-│   │   │       │       ├── page.tsx       # Agent detail/edit
-│   │   │       │       ├── knowledge/page.tsx
-│   │   │       │       ├── test/page.tsx  # Test chat component
-│   │   │       │       └── leads/page.tsx
-│   │   │       ├── billing/page.tsx       # Plan comparison + upgrade
-│   │   │       ├── workflows/
-│   │   │       │   ├── page.tsx
-│   │   │       │   └── [id]/page.tsx
-│   │   │       ├── integrations/page.tsx
-│   │   │       ├── settings/page.tsx      # Profile settings
-│   │   │       └── admin/                 # Admin-only
-│   │   │           ├── page.tsx           # Admin dashboard
-│   │   │           ├── users/page.tsx
-│   │   │           ├── api-keys/page.tsx
-│   │   │           ├── pricing/page.tsx
-│   │   │           └── analytics/page.tsx
+│   │                                      # Note: --no-src-dir used; app/ is at root level
+│   ├── app/
+│   │   ├── layout.tsx                     # Root layout (fonts, providers)
+│   │   ├── page.tsx                       # Landing page
+│   │   ├── globals.css
 │   │   │
-│   │   ├── components/
-│   │   │   ├── ui/                        # shadcn/ui primitives
-│   │   │   ├── layout/
-│   │   │   │   ├── Sidebar.tsx
-│   │   │   │   ├── Topbar.tsx
-│   │   │   │   └── LandingNav.tsx
-│   │   │   └── shared/
-│   │   │       ├── ChatWidget.tsx         # Embeddable chat component
-│   │   │       ├── AgentCard.tsx
-│   │   │       └── PlanCard.tsx
+│   │   ├── (auth)/                        # Auth pages (no sidebar)
+│   │   │   ├── layout.tsx                 # Centered card layout
+│   │   │   ├── login/page.tsx
+│   │   │   ├── register/page.tsx
+│   │   │   ├── verify-email/page.tsx
+│   │   │   └── forgot-password/page.tsx
 │   │   │
-│   │   ├── hooks/
-│   │   │   ├── use-agents.ts
-│   │   │   ├── use-auth.ts
-│   │   │   └── use-billing.ts
-│   │   │
-│   │   ├── lib/
-│   │   │   └── api.ts                     # Axios instance with auth interceptors
-│   │   │
-│   │   └── types/
-│   │       └── index.ts                   # Shared TypeScript interfaces
+│   │   └── (dashboard)/                  # Protected pages (with sidebar)
+│   │       ├── layout.tsx                 # Sidebar + Topbar shell
+│   │       ├── dashboard/page.tsx         # Stats cards, recent agents
+│   │       ├── agents/
+│   │       │   ├── page.tsx               # Agent list with status toggles
+│   │       │   ├── new/page.tsx           # Agent creation wizard
+│   │       │   └── [id]/
+│   │       │       ├── page.tsx           # Agent detail/edit
+│   │       │       ├── knowledge/page.tsx
+│   │       │       ├── test/page.tsx      # Test chat component
+│   │       │       └── leads/page.tsx
+│   │       ├── billing/page.tsx           # Plan comparison + upgrade
+│   │       ├── workflows/
+│   │       │   ├── page.tsx
+│   │       │   └── [id]/page.tsx
+│   │       ├── integrations/page.tsx
+│   │       ├── settings/page.tsx          # Profile settings
+│   │       └── admin/                     # Admin-only
+│   │           ├── page.tsx               # Admin dashboard
+│   │           ├── users/page.tsx
+│   │           ├── api-keys/page.tsx
+│   │           ├── pricing/page.tsx
+│   │           └── analytics/page.tsx
 │   │
+│   ├── components/
+│   │   ├── ui/                            # shadcn/ui primitives
+│   │   ├── layout/
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── Topbar.tsx
+│   │   │   └── LandingNav.tsx
+│   │   └── shared/
+│   │       ├── ChatWidget.tsx             # Embeddable chat component
+│   │       ├── AgentCard.tsx
+│   │       └── PlanCard.tsx
+│   │
+│   ├── hooks/
+│   │   ├── use-agents.ts
+│   │   ├── use-auth.ts
+│   │   └── use-billing.ts
+│   │
+│   ├── lib/
+│   │   └── api.ts                         # Axios instance with auth interceptors
+│   │
+│   ├── types/
+│   │   └── index.ts                       # Shared TypeScript interfaces
+│   │
+│   ├── public/                            # Static assets
 │   ├── tests/                             # Frontend tests (Vitest + RTL)
 │   ├── package.json
+│   ├── next.config.ts
+│   ├── tailwind.config.ts
+│   ├── postcss.config.mjs
+│   ├── tsconfig.json
 │   └── Dockerfile
 │
 ├── whatsapp-bridge/                       # Node.js Baileys service
@@ -241,11 +246,20 @@ botlixio-v2/
 │       ├── docs-sync.md
 │       ├── execute-next.md
 │       ├── plan-check.md
-│       ├── spec-test-case-analyzer.md
-│       ├── spec-to-test-case.md
-│       ├── test-case-to-test.md
-│       ├── test-report.md
-│       └── where-am-i.md
+│       ├── update-notes.md
+│       ├── where-am-i.md
+│       └── tdd-pipeline.md
+│
+├── notes/                                 # Learning journal (auto-updated by /update-notes)
+│   ├── README.md                          # Index of all note files
+│   ├── backend/                           # FastAPI/Python concepts
+│   │   ├── python-packaging.md
+│   │   ├── fastapi-basics.md
+│   │   ├── testing-fastapi.md
+│   │   ├── docker-basics.md
+│   │   └── environment-variables.md
+│   └── frontend/                          # Next.js/TypeScript concepts
+│       └── nextjs-setup.md
 │
 ├── .env.example
 ├── .gitignore

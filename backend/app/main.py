@@ -1,0 +1,43 @@
+"""
+Botlixio — FastAPI application factory.
+
+Middleware, CORS, and router registration all happen here.
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    app = FastAPI(
+        title="Botlixio API",
+        description="AI Agent Builder SaaS — REST API",
+        version="2.0.0",
+        docs_url="/api/docs",
+        redoc_url="/api/redoc",
+        openapi_url="/api/openapi.json",
+    )
+
+    # CORS — configured via environment in Phase 1 (config.py)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Health check — always available
+    @app.get("/health", tags=["health"])
+    async def health() -> dict:
+        return {"status": "ok", "service": "botlixio-api"}
+
+    # API routers registered here as phases are completed
+    # from app.api.v1 import auth, agents, chat, knowledge, billing
+    # app.include_router(auth.router, prefix="/api/v1")
+
+    return app
+
+
+app = create_app()

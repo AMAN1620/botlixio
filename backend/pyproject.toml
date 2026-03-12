@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "botlixio"
+version = "2.0.0"
+description = "Botlixio AI Agent Builder SaaS — Backend"
+requires-python = ">=3.12"
+dependencies = [
+    # Web framework
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    # Database
+    "sqlalchemy>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    # Validation & settings
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    # Auth
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    # AI / LLM
+    "litellm>=1.55.0",
+    # Payments
+    "stripe>=11.0.0",
+    # Email
+    "resend>=2.5.0",
+    # HTTP client
+    "httpx>=0.28.0",
+    # Web scraping
+    "beautifulsoup4>=4.12.0",
+    # File parsing
+    "pypdf2>=3.0.0",
+    "python-docx>=1.1.0",
+    "python-multipart>=0.0.12",
+    # Rate limiting
+    "slowapi>=0.1.9",
+    # Encryption
+    "cryptography>=43.0.0",
+    # Redis
+    "redis>=5.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "factory-boy>=3.3.0",
+    "ruff>=0.8.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "ANN"]
+ignore = ["ANN101", "ANN102"]
