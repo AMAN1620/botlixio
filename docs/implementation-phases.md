@@ -25,13 +25,13 @@ Phased build plan for the Botlixio v2 rebuild. Each phase builds on completed pr
 
 **Goal**: Settings, database connection, and Alembic migrations.
 
-- [ ] `app/core/config.py` — Pydantic Settings (loads `.env`, validates all required vars)
-- [ ] `app/core/database.py` — Async engine, session maker, `Base`, `get_db` dependency
-- [ ] Alembic initialization: `alembic init`, `alembic.ini`, `env.py` using async engine
-- [ ] All SQLAlchemy models (`app/models/*.py`) — all enums and tables from `database-schema.md`
-- [ ] Initial Alembic migration: `alembic revision --autogenerate`
-- [ ] Test: config loads from `.env`, validates missing vars, type coercion
-- [ ] Test: database session creation and teardown
+- [x] `app/core/config.py` — Pydantic Settings (loads `.env`, validates all required vars)
+- [x] `app/core/database.py` — Async engine, session maker, `Base`, `get_db` dependency
+- [x] Alembic initialization: `alembic init`, `alembic.ini`, `env.py` using async engine
+- [x] All SQLAlchemy models (`app/models/*.py`) — all enums and tables from `database-schema.md`
+- [x] Initial Alembic migration: `alembic revision --autogenerate`
+- [x] Test: config loads from `.env`, validates missing vars, type coercion
+- [x] Test: database session creation and teardown
 
 **Done when**: `alembic upgrade head` creates all tables, config tests pass.
 

@@ -1,9 +1,10 @@
-version: "3.9"
-
 # ─────────────────────────────────────────────────────────────
 # Botlixio — Development Docker Compose
 # Starts: PostgreSQL 16 + Redis 7
 # The backend and frontend run locally (outside Docker in dev)
+#
+# Credentials are read from the root .env file — NOT hardcoded.
+# Run: cp .env.example .env  (then fill in real values)
 # ─────────────────────────────────────────────────────────────
 
 services:
@@ -12,15 +13,15 @@ services:
     container_name: botlixio_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: botlixio
-      POSTGRES_PASSWORD: botlixio
-      POSTGRES_DB: botlixio
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U botlixio -d botlixio"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
