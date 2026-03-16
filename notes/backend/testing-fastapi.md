@@ -57,6 +57,48 @@ async def test_async_thing():
 
 Because we set `asyncio_mode = "auto"` in `pyproject.toml`, async tests work without any extra decorator.
 
+### Testing FastAPI app routes (`tests/integration/conftest.py`)
+
+Using `httpx.AsyncClient` along with dependency overrides allows running full HTTP calls against a clean Database without standing up a real server.
+
+```python
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
+from app.main import app
+from app.core.database import get_db
+
+@pytest_asyncio.fixture(scope="function")
+async def client(test_db_url):
+    # Setup database tables and session factories here...
+    
+    # 1. Provide an override for FastAPI's get_db dependency
+    async def _override_get_db():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
+                
+    # 2. Tell the app to use the override instead of real DB
+    app.dependency_overrides[get_db] = _override_get_db
+    
+    # 3. Yield the ASGI virtual client
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        yield ac
+
+    # 4. Cleanup
+    app.dependency_overrides.clear()
+```
+
+**What this does:**
+We use `app.dependency_overrides` so that whenever a route tries to get the database session via `Depends(get_db)`, it actually runs our test session override instead. This enforces fresh sessions + explicit commits per request, ensuring state changes persist cleanly across multi-request tests.
+
 ### Running tests
 
 ```bash
@@ -96,6 +138,7 @@ python -m pytest --cov=app tests/
 - **`asyncio_mode = "auto"` in pyproject.toml** — without this, every async test needs `@pytest.mark.asyncio`. Setting it globally saves typing.
 - **`conftest.py` is auto-loaded** — don't import from it. Fixtures defined there are available everywhere automatically.
 - **`python -m pytest` vs `pytest`** — use `python -m pytest` to ensure you're using the venv's pytest, not a global one.
+- **Transaction Isolation in tests** — When testing integration routes sequentially (e.g. login, then fetching profile), the test engine must `commit()` state changes properly so that subsequent HTTP requests in the same test function read updated values from the database instead of stale SQLAlchemy identity-map caches.
 
 ---
 

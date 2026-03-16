@@ -41,15 +41,15 @@ Phased build plan for the Botlixio v2 rebuild. Each phase builds on completed pr
 
 **Goal**: Register, login, JWT, and password hashing.
 
-- [ ] `app/core/security.py` — `hash_password`, `verify_password`, `create_access_token`, `create_refresh_token`, `decode_token`
-- [ ] `app/schemas/auth.py` — `RegisterRequest`, `LoginRequest`, `TokenResponse`, `UserResponse`
-- [ ] `app/repositories/user_repo.py` — `create_user`, `get_by_email`, `get_by_id`
-- [ ] `app/services/auth_service.py` — `register`, `login`, `get_current_user`
-- [ ] `app/api/v1/auth.py` — `POST /register`, `POST /login`, `GET /me`
-- [ ] `app/api/deps.py` — `get_current_user` dependency (extracts JWT, returns User)
-- [ ] Test: security functions (hash, verify, JWT create/decode)
-- [ ] Test: auth service (register, login, duplicate email)
-- [ ] Test: auth API endpoints (register, login, me, unauthorized)
+- [x] `app/core/security.py` — `hash_password`, `verify_password`, `create_access_token`, `create_refresh_token`, `decode_token`
+- [x] `app/schemas/auth.py` — `RegisterRequest`, `LoginRequest`, `TokenResponse`, `UserResponse`
+- [x] `app/repositories/user_repo.py` — `create_user`, `get_by_email`, `get_by_id`
+- [x] `app/services/auth_service.py` — `register`, `login`, `get_current_user` (and accelerated `refresh_tokens`)
+- [x] `app/api/v1/auth.py` — `POST /register`, `POST /login`, `GET /me` (and accelerated `POST /refresh`)
+- [x] `app/api/deps.py` — `get_current_user` dependency (extracts JWT, returns User)
+- [x] Test: security functions (hash, verify, JWT create/decode)
+- [x] Test: auth service (register, login, duplicate email, accelerated refresh)
+- [x] Test: auth API endpoints (register, login, me, unauthorized, accelerated refresh)
 
 **Done when**: User can register, login, and access protected endpoints via JWT.
 
@@ -60,12 +60,11 @@ Phased build plan for the Botlixio v2 rebuild. Each phase builds on completed pr
 **Goal**: Email verification, password reset, refresh tokens, OAuth.
 
 - [ ] `app/services/email_service.py` — Resend integration (verification + reset emails)
-- [ ] `app/api/v1/auth.py` additions — `POST /verify-email`, `POST /forgot-password`, `POST /reset-password`, `POST /refresh`
-- [ ] Auth service additions: `verify_email`, `forgot_password`, `reset_password`, `refresh_token`
+- [ ] `app/api/v1/auth.py` additions — `POST /verify-email`, `POST /forgot-password`, `POST /reset-password`
+- [ ] Auth service additions: `verify_email`, `forgot_password`, `reset_password`
 - [ ] OAuth: `GET /auth/google`, `GET /auth/google/callback`
 - [ ] Test: email verification flow
 - [ ] Test: password reset flow (valid token, expired token, invalid token)
-- [ ] Test: refresh token rotation
 - [ ] Test: OAuth login (mock external provider)
 
 **Done when**: Full auth lifecycle works — register, verify, login, refresh, forgot/reset password, Google OAuth.

@@ -187,6 +187,8 @@ python -c "from app.models import User, Agent; print('Models loaded OK')"
 - **`Mapped[list["Agent"]]` uses string quotes** — the quotes around `"Agent"` are needed because `Agent` is defined in another file. Python resolves the string later (forward reference).
 - **`server_default` vs `default`** — `default` is set by Python when you create an object. `server_default` is set by PostgreSQL when you INSERT. For timestamps, prefer `server_default=func.now()` so the DB's clock is used (consistent even with multiple app servers).
 - **Don't forget `__tablename__`** — without it, SQLAlchemy guesses the table name from the class name. Explicit is better.
+- **`TIMESTAMP WITHOUT TIME ZONE` and Datetimes** — PostgreSQL's timezone naive columns do NOT accept timezone-aware python datetimes. If you use `datetime.now(timezone.utc)`, asyncpg will throw `DataError: can't subtract offset-naive and offset-aware datetimes`. Fix: use `datetime.utcnow()` (or equivalent Python 3.11+ naive UTC functions) when writing to naive columns.
+- **ASGI, Dependency Injection, and ORM Caching** — When writing API tests with `httpx.AsyncClient` that override the `get_db` session, SQLAlchemy's `setattr` + `flush()` change-tracking might fail to propagate `UPDATE` statements between successive test requests sharing the same async event scope. For critical state changes (like invalidating a token), an explicit SQL `UPDATE` instead of `setattr()` avoids identity-map caching bugs.
 
 ---
 
