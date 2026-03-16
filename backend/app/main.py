@@ -7,6 +7,9 @@ Middleware, CORS, and router registration all happen here.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.config import get_settings
+from app.api.v1 import auth as auth_router
+
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
@@ -19,10 +22,10 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
 
-    # CORS — configured via environment in Phase 1 (config.py)
+    settings = get_settings()
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
+        allow_origins=settings.cors_origins_list,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -33,9 +36,8 @@ def create_app() -> FastAPI:
     async def health() -> dict:
         return {"status": "ok", "service": "botlixio-api"}
 
-    # API routers registered here as phases are completed
-    # from app.api.v1 import auth, agents, chat, knowledge, billing
-    # app.include_router(auth.router, prefix="/api/v1")
+    # API routers
+    app.include_router(auth_router.router, prefix="/api/v1")
 
     return app
 
