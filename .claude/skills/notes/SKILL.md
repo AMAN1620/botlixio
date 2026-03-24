@@ -1,21 +1,21 @@
 ---
-name: update-notes
+name: notes
 description: >
   Writes beginner-friendly learning notes into the notes/ folder based on what was
   recently built in the Botlixio project. Covers FastAPI/Python (backend) and
   Next.js/TypeScript (frontend) concepts, with real code examples from the project.
   Use this skill whenever the user wants to document what they learned, update their
   notes after implementing a feature, or write a tutorial-style explanation of something
-  they just built. Trigger on: "update notes", "document what I learned", "write notes
-  for X", "add notes about JWT", "update the learning notes", "explain what we built".
+  they just built. Trigger on: "notes", "update notes", "document what I learned",
+  "write notes for X", "add notes about JWT", "explain what we built".
 ---
 
-# Update Notes
+# Notes — Write Learning Notes
 
 Writes clear, beginner-friendly learning notes into `notes/` based on what was recently
 built. The reader is learning FastAPI and Next.js/TypeScript while building this project.
 
-## Arguments
+## Input
 
 `$ARGUMENTS` — optional topic filter:
 
@@ -94,9 +94,9 @@ Create new topic files for anything not in this table.
 
 ### [Example Title]
 
-```python
+\```python
 # Real example from this project
-```
+\```
 
 **What this does:** Plain-English explanation.
 
@@ -104,9 +104,9 @@ Create new topic files for anything not in this table.
 
 ## Commands
 
-```bash
+\```bash
 # Commands actually used in this project
-```
+\```
 
 ---
 

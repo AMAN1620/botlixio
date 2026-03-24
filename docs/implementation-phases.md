@@ -1,6 +1,6 @@
 # Implementation Phases
 
-Phased build plan for the Botlixio v2 rebuild. Each phase builds on completed previous phases. Follow TDD for all logic.
+Phased build plan for the Botlixio. Each phase builds on completed previous phases. Follow TDD for all logic.
 
 ---
 

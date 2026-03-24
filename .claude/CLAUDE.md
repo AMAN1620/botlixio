@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Botlixio v2** is a full-stack AI Agent Builder SaaS platform. Users create, configure, and deploy custom AI chatbot agents with RAG knowledge bases, tool calling, and multi-channel deployment (widget, WhatsApp, Discord, Slack).
+**Botlixio** is a full-stack AI Agent Builder SaaS platform. Users create, configure, and deploy custom AI chatbot agents with RAG knowledge bases, tool calling, and multi-channel deployment (widget, WhatsApp, Discord, Slack).
 
 **Architecture**: FastAPI backend (Python 3.12), Next.js 16 frontend (TypeScript), PostgreSQL database, Redis cache. Clean 4-layer architecture: Routes → Services → Repositories → Models.
 

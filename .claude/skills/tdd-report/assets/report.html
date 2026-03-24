@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD Report — __DATE_PLACEHOLDER__</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --yellow: #c9a227;
+      --yellow-bg: #fdf6e3;
+      --blue: #6a9bcc;
+      --blue-bg: #edf4fa;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .meta {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      text-align: right;
+    }
+
+    /* ---- Main ---- */
+    .main {
+      flex: 1;
+      padding: 1.5rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Summary Cards ---- */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-card .value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+    }
+    .stat-card.passed .value { color: var(--green); }
+    .stat-card.failed .value { color: var(--red); }
+    .stat-card.skipped .value { color: var(--yellow); }
+    .stat-card.errors .value { color: var(--accent); }
+    .stat-card.rate .value { color: var(--blue); }
+
+    /* ---- Phase Badge ---- */
+    .phase-banner {
+      border-radius: var(--radius);
+      padding: 0.875rem 1rem;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .phase-banner.red { background: var(--red-bg); color: var(--red); border: 1px solid #e8b4b4; }
+    .phase-banner.green { background: var(--green-bg); color: var(--green); border: 1px solid #c5d4b0; }
+    .phase-banner.mixed { background: var(--yellow-bg); color: #8a7119; border: 1px solid #e8d88c; }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .section-header .count {
+      background: var(--border);
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem;
+      color: var(--text);
+    }
+    .section-body {
+      padding: 0;
+    }
+
+    /* ---- Tables ---- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+    th {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    td {
+      padding: 0.625rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8f7f3; }
+
+    .mono {
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.75rem;
+    }
+
+    /* ---- Failure Cards ---- */
+    .failure-card {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .failure-card:last-child { border-bottom: none; }
+    .failure-card .test-name {
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--red);
+      margin-bottom: 0.5rem;
+    }
+    .failure-card .detail {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.25rem 0.75rem;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    .failure-card .detail dt {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .failure-card .detail dd {
+      color: var(--text);
+    }
+
+    /* ---- Recommendations ---- */
+    .rec-list {
+      list-style: none;
+      padding: 0;
+    }
+    .rec-list li {
+      padding: 0.625rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      display: flex;
+      gap: 0.625rem;
+      align-items: flex-start;
+    }
+    .rec-list li:last-child { border-bottom: none; }
+    .rec-num {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: rgba(217, 119, 87, 0.1);
+      width: 1.5rem;
+      height: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    /* ---- Empty state ---- */
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Filter bar ---- */
+    .filter-bar {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .filter-bar .filter-label {
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 0.6875rem;
+      letter-spacing: 0.05em;
+    }
+    .filter-btn {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .filter-btn:hover { background: var(--bg); }
+    .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1>TDD Test Report</h1>
+      <div class="meta">__DATE_PLACEHOLDER__</div>
+    </div>
+    <div class="meta">
+      <div>__FILTER_PLACEHOLDER__</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="stat-card passed">
+        <div class="value" id="passed-count">__PASSED_PLACEHOLDER__</div>
+        <div class="label">Passed</div>
+      </div>
+      <div class="stat-card failed">
+        <div class="value" id="failed-count">__FAILED_PLACEHOLDER__</div>
+        <div class="label">Failed</div>
+      </div>
+      <div class="stat-card skipped">
+        <div class="value" id="skipped-count">__SKIPPED_PLACEHOLDER__</div>
+        <div class="label">Skipped</div>
+      </div>
+      <div class="stat-card errors">
+        <div class="value" id="errors-count">__ERRORS_PLACEHOLDER__</div>
+        <div class="label">Errors</div>
+      </div>
+      <div class="stat-card rate">
+        <div class="value" id="rate-value">__RATE_PLACEHOLDER__</div>
+        <div class="label">Pass Rate</div>
+      </div>
+    </div>
+
+    <!-- Phase Banner -->
+    __PHASE_BANNER_PLACEHOLDER__
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <span class="filter-label">Show:</span>
+      <button class="filter-btn active" onclick="filterTests('all')">All</button>
+      <button class="filter-btn" onclick="filterTests('red')">RED Phase</button>
+      <button class="filter-btn" onclick="filterTests('real')">Real Failures</button>
+      <button class="filter-btn" onclick="filterTests('setup')">Setup Errors</button>
+    </div>
+
+    <!-- RED Phase Failures -->
+    __RED_SECTION_PLACEHOLDER__
+
+    <!-- Real Failures -->
+    __REAL_SECTION_PLACEHOLDER__
+
+    <!-- Setup Errors -->
+    __SETUP_SECTION_PLACEHOLDER__
+
+    <!-- Recommendations -->
+    __RECOMMENDATIONS_PLACEHOLDER__
+  </div>
+
+  <script>
+    function filterTests(type) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const sections = {
+        red: document.getElementById('section-red'),
+        real: document.getElementById('section-real'),
+        setup: document.getElementById('section-setup'),
+      };
+
+      Object.entries(sections).forEach(([key, el]) => {
+        if (!el) return;
+        if (type === 'all' || type === key) {
+          el.style.display = '';
+        } else {
+          el.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
