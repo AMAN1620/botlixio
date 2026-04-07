@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Botlixio Skills Flow — How Skills Use implementation-phases.md</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0f; color: #e0e0e8; line-height: 1.6; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 48px 32px; text-align: center; border-bottom: 2px solid #2a2a4a; }
+  .header h1 { font-size: 2.4rem; font-weight: 700; background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+  .header p { color: #8888aa; font-size: 1.1rem; max-width: 700px; margin: 0 auto; }
+
+  /* Legend */
+  .legend { display: flex; gap: 24px; justify-content: center; padding: 20px 32px; flex-wrap: wrap; border-bottom: 1px solid #1e1e3a; background: #0e0e1a; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #aaa; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+  .legend-dot.source { background: #f59e0b; }
+  .legend-dot.orchestrator { background: #8b5cf6; }
+  .legend-dot.quality { background: #06b6d4; }
+  .legend-dot.support { background: #22c55e; }
+  .legend-dot.meta { background: #ef4444; }
+
+  /* Main layout */
+  .container { max-width: 1400px; margin: 0 auto; padding: 40px 32px; }
+
+  /* Central hub */
+  .hub-section { text-align: center; margin-bottom: 48px; }
+  .hub { display: inline-block; background: linear-gradient(135deg, #f59e0b22, #f59e0b08); border: 2px solid #f59e0b; border-radius: 16px; padding: 24px 40px; position: relative; }
+  .hub h2 { color: #f59e0b; font-size: 1.3rem; margin-bottom: 4px; }
+  .hub .subtitle { color: #999; font-size: 0.85rem; }
+  .hub .badge { display: inline-block; margin-top: 8px; background: #f59e0b22; color: #f59e0b; font-size: 0.75rem; padding: 2px 10px; border-radius: 12px; border: 1px solid #f59e0b44; }
+
+  /* Skills grid */
+  .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 48px; }
+  @media (max-width: 900px) { .skills-grid { grid-template-columns: 1fr; } }
+
+  /* Skill card */
+  .skill-card { background: #12121f; border: 1px solid #2a2a4a; border-radius: 14px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+  .skill-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .skill-card-header { padding: 20px 24px 12px; display: flex; align-items: center; gap: 12px; }
+  .skill-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+  .skill-card-header h3 { font-size: 1.1rem; color: #f0f0ff; }
+  .skill-card-header .trigger { font-size: 0.75rem; color: #888; font-family: monospace; background: #1a1a2e; padding: 2px 8px; border-radius: 6px; margin-left: auto; }
+  .skill-body { padding: 0 24px 20px; }
+  .skill-desc { font-size: 0.88rem; color: #aaa; margin-bottom: 14px; }
+
+  /* Flow steps */
+  .flow { list-style: none; padding: 0; }
+  .flow li { position: relative; padding: 6px 0 6px 28px; font-size: 0.82rem; color: #ccc; }
+  .flow li::before { content: ''; position: absolute; left: 8px; top: 14px; width: 8px; height: 8px; border-radius: 50%; }
+  .flow li::after { content: ''; position: absolute; left: 11px; top: 22px; width: 2px; height: calc(100% - 14px); }
+  .flow li:last-child::after { display: none; }
+
+  /* Category colors for flow dots/lines */
+  .cat-orchestrator .flow li::before { background: #8b5cf6; }
+  .cat-orchestrator .flow li::after { background: #8b5cf633; }
+  .cat-quality .flow li::before { background: #06b6d4; }
+  .cat-quality .flow li::after { background: #06b6d433; }
+  .cat-support .flow li::before { background: #22c55e; }
+  .cat-support .flow li::after { background: #22c55e33; }
+  .cat-meta .flow li::before { background: #ef4444; }
+  .cat-meta .flow li::after { background: #ef444433; }
+
+  .flow .reads-plan { color: #f59e0b; font-weight: 600; }
+  .flow .writes-plan { color: #fb923c; font-weight: 600; }
+  .flow .uses-skill { color: #a78bfa; }
+
+  /* Relation badges */
+  .relation-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .rel-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; border: 1px solid; }
+  .rel-badge.reads { color: #f59e0b; border-color: #f59e0b44; background: #f59e0b0a; }
+  .rel-badge.writes { color: #fb923c; border-color: #fb923c44; background: #fb923c0a; }
+  .rel-badge.calls { color: #a78bfa; border-color: #a78bfa44; background: #a78bfa0a; }
+
+  /* Interaction map */
+  .interaction-section { margin-top: 48px; }
+  .interaction-section h2 { text-align: center; font-size: 1.5rem; margin-bottom: 24px; color: #ddd; }
+
+  .interaction-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .interaction-table th, .interaction-table td { padding: 10px 14px; border: 1px solid #2a2a4a; text-align: left; }
+  .interaction-table th { background: #1a1a2e; color: #8888cc; font-weight: 600; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.5px; }
+  .interaction-table td { background: #12121f; }
+  .interaction-table tr:hover td { background: #16162a; }
+  .interaction-table .icon-cell { text-align: center; font-size: 1rem; }
+
+  /* Flow diagram (SVG-based) */
+  .flow-diagram { margin: 48px 0; text-align: center; }
+  .flow-diagram h2 { font-size: 1.5rem; margin-bottom: 24px; color: #ddd; }
+  .flow-diagram svg { max-width: 100%; }
+
+  /* Phase timeline */
+  .phase-timeline { margin-top: 48px; }
+  .phase-timeline h2 { text-align: center; font-size: 1.5rem; margin-bottom: 24px; color: #ddd; }
+  .phases { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 0 20px; }
+  .phase-chip { padding: 8px 16px; border-radius: 10px; font-size: 0.78rem; font-weight: 600; border: 1px solid; }
+  .phase-chip.done { background: #22c55e15; border-color: #22c55e44; color: #22c55e; }
+  .phase-chip.todo { background: #64748b12; border-color: #64748b44; color: #64748b; }
+  .phase-chip.next { background: #8b5cf615; border-color: #8b5cf644; color: #8b5cf6; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+  .arrow-between { color: #444; font-size: 1.2rem; display: flex; align-items: center; }
+
+  /* Footer */
+  .footer { text-align: center; padding: 32px; color: #555; font-size: 0.8rem; border-top: 1px solid #1e1e3a; margin-top: 48px; }
+
+  code { background: #1a1a2e; padding: 1px 6px; border-radius: 4px; font-size: 0.82rem; color: #a78bfa; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>Botlixio Skills Ecosystem</h1>
+  <p>How 9 custom Claude Code skills orchestrate development around <code>docs/implementation-phases.md</code> as the single source of truth</p>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot source"></div> Source of Truth (Plan)</div>
+  <div class="legend-item"><div class="legend-dot orchestrator"></div> Orchestrator Skills</div>
+  <div class="legend-item"><div class="legend-dot quality"></div> Quality & Audit Skills</div>
+  <div class="legend-item"><div class="legend-dot support"></div> Support Skills</div>
+  <div class="legend-item"><div class="legend-dot meta"></div> Meta Skills</div>
+</div>
+
+<div class="container">
+
+  <!-- Central Hub -->
+  <div class="hub-section">
+    <div class="hub">
+      <h2>docs/implementation-phases.md</h2>
+      <div class="subtitle">17 phases &middot; <code>[x]</code> / <code>[ ]</code> checkboxes &middot; dependency-ordered tasks</div>
+      <div class="badge">READ by 7 skills &middot; WRITTEN by 2 skills</div>
+    </div>
+  </div>
+
+  <!-- Phase Timeline -->
+  <div class="phase-timeline">
+    <h2>Implementation Phases Timeline</h2>
+    <div class="phases">
+      <div class="phase-chip done">P0 Scaffolding</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip done">P1 Config & DB</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip done">P2 Auth Core</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip next">P3 Auth Extended</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P4 Agent CRUD</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P5 Knowledge</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P6 Chat Engine</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P7 Tools</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P8 Widget</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P9 Billing</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P10 Integrations</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P11 Admin</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P12 Multi-Channel</div>
+      <div class="arrow-between">&rarr;</div>
+      <div class="phase-chip todo">P13&ndash;16 Frontend &amp; Deploy</div>
+    </div>
+  </div>
+
+  <!-- Flow Diagram (ASCII-art style with HTML) -->
+  <div class="flow-diagram">
+    <h2>Skill Interaction Flow</h2>
+    <svg viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg" style="max-width: 1000px;">
+      <!-- Central node -->
+      <rect x="370" y="10" width="260" height="56" rx="12" fill="#1a1a2e" stroke="#f59e0b" stroke-width="2"/>
+      <text x="500" y="35" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="700">implementation-phases.md</text>
+      <text x="500" y="52" text-anchor="middle" fill="#888" font-size="10">[x] / [ ] checkboxes &bull; dependency order</text>
+
+      <!-- Lines from hub to skills -->
+      <!-- where-am-i -->
+      <line x1="400" y1="66" x2="120" y2="140" stroke="#8b5cf644" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <rect x="20" y="120" width="200" height="70" rx="10" fill="#12121f" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="120" y="143" text-anchor="middle" fill="#8b5cf6" font-size="12" font-weight="700">/where-am-i</text>
+      <text x="120" y="160" text-anchor="middle" fill="#aaa" font-size="9">READS plan &rarr; scans codebase</text>
+      <text x="120" y="175" text-anchor="middle" fill="#aaa" font-size="9">&rarr; shows status + drift</text>
+      <circle cx="400" cy="66" r="4" fill="#f59e0b"/>
+
+      <!-- execute-next -->
+      <line x1="500" y1="66" x2="500" y2="140" stroke="#8b5cf6" stroke-width="2"/>
+      <rect x="380" y="140" width="240" height="80" rx="10" fill="#12121f" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="500" y="165" text-anchor="middle" fill="#8b5cf6" font-size="13" font-weight="700">/execute-next</text>
+      <text x="500" y="182" text-anchor="middle" fill="#aaa" font-size="9">READS plan &rarr; picks next [ ] task</text>
+      <text x="500" y="196" text-anchor="middle" fill="#aaa" font-size="9">&rarr; TDD cycle &rarr; WRITES [x] back</text>
+      <text x="500" y="210" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="600">PRIMARY ORCHESTRATOR</text>
+      <circle cx="500" cy="66" r="4" fill="#f59e0b"/>
+
+      <!-- code-coverage -->
+      <line x1="600" y1="66" x2="880" y2="140" stroke="#06b6d444" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <rect x="780" y="120" width="200" height="70" rx="10" fill="#12121f" stroke="#06b6d4" stroke-width="1.5"/>
+      <text x="880" y="143" text-anchor="middle" fill="#06b6d4" font-size="12" font-weight="700">/code-coverage</text>
+      <text x="880" y="160" text-anchor="middle" fill="#aaa" font-size="9">READS plan &rarr; scans files</text>
+      <text x="880" y="175" text-anchor="middle" fill="#aaa" font-size="9">&rarr; finds STUB / MISSING / DRIFT</text>
+      <circle cx="600" cy="66" r="4" fill="#f59e0b"/>
+
+      <!-- security-audit -->
+      <line x1="630" y1="66" x2="880" y2="240" stroke="#06b6d422" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <rect x="780" y="220" width="200" height="70" rx="10" fill="#12121f" stroke="#06b6d4" stroke-width="1.5"/>
+      <text x="880" y="243" text-anchor="middle" fill="#06b6d4" font-size="12" font-weight="700">/security-audit</text>
+      <text x="880" y="260" text-anchor="middle" fill="#aaa" font-size="9">READS plan for phase context</text>
+      <text x="880" y="275" text-anchor="middle" fill="#aaa" font-size="9">&rarr; suggests plan additions</text>
+      <circle cx="630" cy="66" r="4" fill="#f59e0b"/>
+
+      <!-- execute-next calls create-spec -->
+      <line x1="380" y1="190" x2="210" y2="270" stroke="#a78bfa55" stroke-width="1.5"/>
+      <text x="280" y="230" fill="#a78bfa" font-size="8" transform="rotate(-25, 280, 230)">calls if no SPEC.md</text>
+
+      <!-- create-spec -->
+      <rect x="20" y="250" width="200" height="70" rx="10" fill="#12121f" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="120" y="273" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700">/create-spec</text>
+      <text x="120" y="290" text-anchor="middle" fill="#aaa" font-size="9">Reads feature docs + code</text>
+      <text x="120" y="305" text-anchor="middle" fill="#aaa" font-size="9">&rarr; produces SPEC.md</text>
+
+      <!-- execute-next calls tdd-pipeline -->
+      <line x1="500" y1="220" x2="500" y2="310" stroke="#a78bfa55" stroke-width="1.5"/>
+      <text x="510" y="268" fill="#a78bfa" font-size="8">uses TDD pattern</text>
+
+      <!-- tdd-pipeline -->
+      <rect x="380" y="310" width="240" height="70" rx="10" fill="#12121f" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="500" y="335" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700">/tdd-pipeline</text>
+      <text x="500" y="352" text-anchor="middle" fill="#aaa" font-size="9">SPEC.md &rarr; TEST-CASES.md &rarr; pytest</text>
+      <text x="500" y="367" text-anchor="middle" fill="#aaa" font-size="9">&rarr; Red &rarr; Green &rarr; Report</text>
+
+      <!-- test-auditor -->
+      <line x1="620" y1="345" x2="780" y2="345" stroke="#06b6d433" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <rect x="780" y="320" width="200" height="60" rx="10" fill="#12121f" stroke="#06b6d4" stroke-width="1.5"/>
+      <text x="880" y="343" text-anchor="middle" fill="#06b6d4" font-size="12" font-weight="700">/test-auditor</text>
+      <text x="880" y="360" text-anchor="middle" fill="#aaa" font-size="9">Audits tests vs spec vs code</text>
+      <text x="710" y="337" fill="#06b6d4" font-size="8">validates output</text>
+
+      <!-- update-notes -->
+      <line x1="420" y1="220" x2="120" y2="390" stroke="#22c55e33" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <rect x="20" y="380" width="200" height="70" rx="10" fill="#12121f" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="120" y="403" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700">/update-notes</text>
+      <text x="120" y="420" text-anchor="middle" fill="#aaa" font-size="9">READS plan for what's done</text>
+      <text x="120" y="435" text-anchor="middle" fill="#aaa" font-size="9">&rarr; writes learning notes/</text>
+
+      <!-- skill-creator -->
+      <rect x="380" y="430" width="240" height="60" rx="10" fill="#12121f" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="500" y="455" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="700">/skill-creator</text>
+      <text x="500" y="470" text-anchor="middle" fill="#aaa" font-size="9">Meta: creates &amp; improves skills</text>
+
+      <!-- execute-next calls code-coverage -->
+      <line x1="620" y1="180" x2="780" y2="155" stroke="#a78bfa33" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="700" y="158" fill="#a78bfa" font-size="8">runs after batch</text>
+
+    </svg>
+  </div>
+
+  <!-- Skills Grid -->
+  <h2 style="text-align:center; font-size:1.5rem; margin-bottom:24px; color:#ddd;">Skill Details &amp; Flows</h2>
+
+  <div class="skills-grid">
+
+    <!-- /where-am-i -->
+    <div class="skill-card cat-orchestrator">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#8b5cf622; color:#8b5cf6;">&#x1f4cd;</div>
+        <h3>/where-am-i</h3>
+        <span class="trigger">"project status"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Quick scannable briefing — what's done, in progress, next steps, any drift.</div>
+        <ol class="flow">
+          <li class="reads-plan">READ <code>docs/implementation-phases.md</code> — parse [x] / [ ] checkboxes</li>
+          <li>READ <code>docs/README.md</code> — project overview</li>
+          <li>Scan codebase: <code>ls backend/app/api/v1/</code>, services, models, schemas, repos, tests</li>
+          <li>Compare scan results vs plan checkboxes &rarr; detect drift</li>
+          <li>Output: Done phases, current phase, next 3-5 tasks, drift warnings</li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge reads">READS plan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /execute-next -->
+    <div class="skill-card cat-orchestrator">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#8b5cf622; color:#8b5cf6;">&#x26a1;</div>
+        <h3>/execute-next</h3>
+        <span class="trigger">"keep going"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Primary orchestrator. Picks next task, runs full TDD cycle, updates plan.</div>
+        <ol class="flow">
+          <li class="reads-plan">READ <code>docs/implementation-phases.md</code> — find earliest [ ] task</li>
+          <li>Verify all prior phases are complete (no skipping)</li>
+          <li class="uses-skill">If no SPEC.md &rarr; calls <code>/create-spec</code> to generate one</li>
+          <li>Read SPEC.md + business-rules + api-routes + db-schema</li>
+          <li>Write failing tests FIRST (Red phase)</li>
+          <li>Implement minimum code to pass (Green phase)</li>
+          <li>Refactor while keeping tests green</li>
+          <li class="writes-plan">WRITE back to plan: change <code>[ ]</code> &rarr; <code>[x]</code></li>
+          <li class="uses-skill">Run <code>/code-coverage</code> for consistency check</li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge reads">READS plan</span>
+          <span class="rel-badge writes">WRITES plan</span>
+          <span class="rel-badge calls">CALLS /create-spec</span>
+          <span class="rel-badge calls">CALLS /code-coverage</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /create-spec -->
+    <div class="skill-card cat-support">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#22c55e22; color:#22c55e;">&#x1f4dd;</div>
+        <h3>/create-spec</h3>
+        <span class="trigger">"spec out auth"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Creates SPEC.md for a feature module. Retroactive (document code) or Proactive (design guide).</div>
+        <ol class="flow">
+          <li>Detect project structure (API dir, services, schemas, tests)</li>
+          <li>Identify module name + feature doc + source files</li>
+          <li>Mode detect: Retroactive (code exists) vs Proactive (doesn't)</li>
+          <li>Read feature doc + API routes + business rules + DB schema</li>
+          <li>If retroactive: also read schemas, services, routes, repos, tests</li>
+          <li>Analyze: routes, access control, schemas, edge cases</li>
+          <li>Write <code>docs/specs/{module}.SPEC.md</code> with template</li>
+          <li>Verify: file paths exist, response codes match, schema names match</li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge reads">READS feature docs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /tdd-pipeline -->
+    <div class="skill-card cat-support">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#22c55e22; color:#22c55e;">&#x1f9ea;</div>
+        <h3>/tdd-pipeline</h3>
+        <span class="trigger">"write tests first"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Complete TDD pipeline: spec &rarr; test cases &rarr; coverage analysis &rarr; pytest code &rarr; report.</div>
+        <ol class="flow">
+          <li>Detect project structure (pytest config, test dirs, import root)</li>
+          <li><code>plan</code>: Extract test cases from SPEC.md &rarr; TEST-CASES.md</li>
+          <li><code>analyze</code>: Map spec requirements to test cases &rarr; find gaps</li>
+          <li><code>generate</code>: Write runnable pytest files (unit, service, API)</li>
+          <li>Verify RED: <code>pytest -v</code> — tests must fail</li>
+          <li><code>report</code>: Run tests, produce pass/fail summary</li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge reads">READS SPEC.md</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /code-coverage (plan-check) -->
+    <div class="skill-card cat-quality">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#06b6d422; color:#06b6d4;">&#x1f50d;</div>
+        <h3>/code-coverage</h3>
+        <span class="trigger">"check the plan"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Audits plan vs actual codebase. Finds STUB, MISSING, DRIFT, UNPLANNED, OUT OF ORDER.</div>
+        <ol class="flow">
+          <li class="reads-plan">READ <code>docs/implementation-phases.md</code> — build done/incomplete lists</li>
+          <li>Scan codebase: file existence, line counts, stub detection</li>
+          <li>Check for spec alignment (SPEC.md vs code)</li>
+          <li>Check dependency violations (Phase N+1 before Phase N)</li>
+          <li>Check for unplanned work (files outside the plan)</li>
+          <li>Classify: MISSING, STUB, DRIFT, UNPLANNED, OUT OF ORDER, PLAN GAP</li>
+          <li>Output: Progress table + deviations + risk + recommendations</li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge reads">READS plan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /test-auditor -->
+    <div class="skill-card cat-quality">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#06b6d422; color:#06b6d4;">&#x2705;</div>
+        <h3>/test-auditor</h3>
+        <span class="trigger">"audit my tests"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Audits pytest tests against spec AND implementation. Finds incorrect, missing, redundant tests.</div>
+        <ol class="flow">
+          <li>Discover project layout (tests, specs, implementation)</li>
+          <li>Load 3 sources: spec docs, implementation code, test files</li>
+          <li><strong>Audit A</strong>: Tests vs Spec &rarr; find INCORRECT tests</li>
+          <li><strong>Audit B</strong>: Spec &rarr; Tests &rarr; find MISSING coverage</li>
+          <li><strong>Audit C</strong>: Implementation &rarr; Tests &rarr; find untested code paths</li>
+          <li><strong>Audit D</strong>: Redundancy &rarr; find duplicate/trivial/dead tests</li>
+          <li>Classify by severity: Critical / High / Medium / Low</li>
+          <li>Output: Summary table + per-finding detail + recommendations</li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge reads">READS specs + code + tests</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /security-audit -->
+    <div class="skill-card cat-quality">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#06b6d422; color:#06b6d4;">&#x1f6e1;</div>
+        <h3>/security-audit</h3>
+        <span class="trigger">"check security"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Full security scan: secrets, auth, API, database, infra, dependencies.</div>
+        <ol class="flow">
+          <li class="reads-plan">READ <code>docs/implementation-phases.md</code> — what's been built</li>
+          <li>Read DB schema, business rules, API routes, .env.example</li>
+          <li>Scan: hardcoded secrets, JWT config, password hashing</li>
+          <li>Scan: CORS, input validation, raw SQL, rate limiting</li>
+          <li>Scan: Docker config, port exposure, DEBUG mode</li>
+          <li>Scan: dependency CVEs, lockfiles</li>
+          <li>Output: <code>docs/audit-report.md</code> with findings + code fixes</li>
+          <li class="writes-plan">Suggest additions to <code>implementation-phases.md</code></li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge reads">READS plan</span>
+          <span class="rel-badge writes">SUGGESTS plan changes</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /update-notes -->
+    <div class="skill-card cat-support">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#22c55e22; color:#22c55e;">&#x1f4da;</div>
+        <h3>/update-notes</h3>
+        <span class="trigger">"update notes"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Writes beginner-friendly learning notes into notes/ based on recently built features.</div>
+        <ol class="flow">
+          <li class="reads-plan">READ <code>docs/implementation-phases.md</code> — which tasks are [x] done</li>
+          <li>Scan recently modified Python/TypeScript files</li>
+          <li>Read existing notes (avoid duplication)</li>
+          <li>Map completed work to topic files (e.g., auth &rarr; auth-and-security.md)</li>
+          <li>Write/update notes with: concepts, code examples, commands, gotchas</li>
+          <li>Update <code>notes/README.md</code> index</li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge reads">READS plan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /skill-creator -->
+    <div class="skill-card cat-meta" style="grid-column: 1 / -1;">
+      <div class="skill-card-header">
+        <div class="skill-icon" style="background:#ef444422; color:#ef4444;">&#x1f528;</div>
+        <h3>/skill-creator</h3>
+        <span class="trigger">"create a skill"</span>
+      </div>
+      <div class="skill-body">
+        <div class="skill-desc">Meta-skill: creates, tests, benchmarks, and optimizes other skills. Does not directly use implementation-phases.md.</div>
+        <ol class="flow">
+          <li>Capture intent: what should the skill do, when should it trigger</li>
+          <li>Interview for edge cases, input/output formats, success criteria</li>
+          <li>Write SKILL.md with frontmatter + instructions</li>
+          <li>Create 2-3 test prompts &rarr; spawn with-skill + baseline subagents</li>
+          <li>Grade assertions + aggregate benchmark + launch eval viewer</li>
+          <li>Read user feedback &rarr; improve skill &rarr; repeat until satisfied</li>
+          <li>Optimize description for triggering accuracy (run_loop.py)</li>
+        </ol>
+        <div class="relation-badges">
+          <span class="rel-badge calls">CREATES other skills</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interaction Table -->
+  <div class="interaction-section">
+    <h2>Skill Interaction Matrix</h2>
+    <table class="interaction-table">
+      <thead>
+        <tr>
+          <th>Skill</th>
+          <th>Category</th>
+          <th>Reads Plan</th>
+          <th>Writes Plan</th>
+          <th>Calls Other Skills</th>
+          <th>Reads Other Docs</th>
+          <th>Writes Files</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>/execute-next</strong></td>
+          <td style="color:#8b5cf6">Orchestrator</td>
+          <td class="icon-cell">&#x2705;</td>
+          <td class="icon-cell">&#x2705;</td>
+          <td>/create-spec, /code-coverage</td>
+          <td>SPEC.md, business-rules, api-routes, db-schema</td>
+          <td>Source code, test files</td>
+        </tr>
+        <tr>
+          <td><strong>/where-am-i</strong></td>
+          <td style="color:#8b5cf6">Orchestrator</td>
+          <td class="icon-cell">&#x2705;</td>
+          <td class="icon-cell">&mdash;</td>
+          <td>&mdash;</td>
+          <td>README.md</td>
+          <td>&mdash; (output only)</td>
+        </tr>
+        <tr>
+          <td><strong>/code-coverage</strong></td>
+          <td style="color:#06b6d4">Quality</td>
+          <td class="icon-cell">&#x2705;</td>
+          <td class="icon-cell">&mdash;</td>
+          <td>&mdash;</td>
+          <td>SPEC.md, db-schema</td>
+          <td>&mdash; (output only)</td>
+        </tr>
+        <tr>
+          <td><strong>/test-auditor</strong></td>
+          <td style="color:#06b6d4">Quality</td>
+          <td class="icon-cell">&mdash;</td>
+          <td class="icon-cell">&mdash;</td>
+          <td>&mdash;</td>
+          <td>feature docs, SPEC.md, business-rules</td>
+          <td>&mdash; (output only)</td>
+        </tr>
+        <tr>
+          <td><strong>/security-audit</strong></td>
+          <td style="color:#06b6d4">Quality</td>
+          <td class="icon-cell">&#x2705;</td>
+          <td class="icon-cell">&#x1f4a1;</td>
+          <td>&mdash;</td>
+          <td>db-schema, business-rules, api-routes, .env</td>
+          <td>docs/audit-report.md</td>
+        </tr>
+        <tr>
+          <td><strong>/create-spec</strong></td>
+          <td style="color:#22c55e">Support</td>
+          <td class="icon-cell">&mdash;</td>
+          <td class="icon-cell">&mdash;</td>
+          <td>&mdash;</td>
+          <td>feature docs, api-routes, business-rules, db-schema</td>
+          <td>docs/specs/*.SPEC.md</td>
+        </tr>
+        <tr>
+          <td><strong>/tdd-pipeline</strong></td>
+          <td style="color:#22c55e">Support</td>
+          <td class="icon-cell">&mdash;</td>
+          <td class="icon-cell">&mdash;</td>
+          <td>&mdash;</td>
+          <td>SPEC.md, conftest.py</td>
+          <td>TEST-CASES.md, test files</td>
+        </tr>
+        <tr>
+          <td><strong>/update-notes</strong></td>
+          <td style="color:#22c55e">Support</td>
+          <td class="icon-cell">&#x2705;</td>
+          <td class="icon-cell">&mdash;</td>
+          <td>&mdash;</td>
+          <td>&mdash;</td>
+          <td>notes/**/*.md</td>
+        </tr>
+        <tr>
+          <td><strong>/skill-creator</strong></td>
+          <td style="color:#ef4444">Meta</td>
+          <td class="icon-cell">&mdash;</td>
+          <td class="icon-cell">&mdash;</td>
+          <td>&mdash;</td>
+          <td>&mdash;</td>
+          <td>SKILL.md, evals/, workspace/</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:8px; font-size:0.78rem; color:#666;">&#x1f4a1; = suggests changes (does not directly write)</p>
+  </div>
+
+  <!-- Typical Workflow -->
+  <div class="interaction-section" style="margin-top: 48px;">
+    <h2>Typical Development Workflow</h2>
+    <div style="max-width: 700px; margin: 0 auto; background: #12121f; border: 1px solid #2a2a4a; border-radius: 14px; padding: 28px 32px;">
+      <ol style="list-style: none; padding: 0;">
+        <li style="padding: 12px 0; border-bottom: 1px solid #1e1e3a; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="background: #8b5cf622; color: #8b5cf6; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; flex-shrink: 0;">1</span>
+          <div>
+            <strong style="color:#f0f0ff;">/where-am-i</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; "Where did I leave off?" Get a status briefing.</span>
+          </div>
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #1e1e3a; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="background: #8b5cf622; color: #8b5cf6; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; flex-shrink: 0;">2</span>
+          <div>
+            <strong style="color:#f0f0ff;">/execute-next</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; Auto-picks next task, generates spec if needed, runs full TDD.</span>
+          </div>
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #1e1e3a; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="color:#888; font-size:0.75rem; padding: 4px 12px; flex-shrink: 0; margin-top: 2px;">&#x21b3;</span>
+          <div>
+            <strong style="color:#22c55e;">/create-spec</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; Auto-called if SPEC.md is missing for the module.</span>
+          </div>
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #1e1e3a; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="color:#888; font-size:0.75rem; padding: 4px 12px; flex-shrink: 0; margin-top: 2px;">&#x21b3;</span>
+          <div>
+            <strong style="color:#22c55e;">/tdd-pipeline</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; Pattern used internally: Red &rarr; Green &rarr; Refactor.</span>
+          </div>
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #1e1e3a; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="background: #06b6d422; color: #06b6d4; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; flex-shrink: 0;">3</span>
+          <div>
+            <strong style="color:#f0f0ff;">/code-coverage</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; Verify plan accuracy after completing tasks. Catch drift early.</span>
+          </div>
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #1e1e3a; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="background: #06b6d422; color: #06b6d4; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; flex-shrink: 0;">4</span>
+          <div>
+            <strong style="color:#f0f0ff;">/test-auditor</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; Are the tests correct, complete, non-redundant?</span>
+          </div>
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #1e1e3a; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="background: #06b6d422; color: #06b6d4; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; flex-shrink: 0;">5</span>
+          <div>
+            <strong style="color:#f0f0ff;">/security-audit</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; Periodic: scan for vulnerabilities before milestones.</span>
+          </div>
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #1e1e3a; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="background: #22c55e22; color: #22c55e; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; flex-shrink: 0;">6</span>
+          <div>
+            <strong style="color:#f0f0ff;">/update-notes</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; Document what you learned after building a feature.</span>
+          </div>
+        </li>
+        <li style="padding: 12px 0; display: flex; gap: 14px; align-items: flex-start;">
+          <span style="background: #ef444422; color: #ef4444; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; flex-shrink: 0;">&#x2699;</span>
+          <div>
+            <strong style="color:#f0f0ff;">/skill-creator</strong>
+            <span style="color:#888; font-size:0.85rem;"> &mdash; As needed: create or improve any skill in the ecosystem.</span>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Botlixio v2 Skills Ecosystem &middot; 9 Skills &middot; Generated 2026-03-21
+</div>
+
+</body>
+</html>

@@ -2,6 +2,8 @@
 
 Phased build plan for the Botlixio. Each phase builds on completed previous phases. Follow TDD for all logic.
 
+> **Active sprint** → See [customer-support-bot-plan.md](customer-support-bot-plan.md) for the focused 6-step plan to ship the Customer Support solution end-to-end (Docker auth verification → Agent CRUD → Crawl4AI knowledge ingestion → RAG chat engine → JS embed widget → Dashboard UI).
+
 ---
 
 ## Phase 0: Project Scaffolding & DevOps Foundation
@@ -59,13 +61,13 @@ Phased build plan for the Botlixio. Each phase builds on completed previous phas
 
 **Goal**: Email verification, password reset, refresh tokens, OAuth.
 
-- [ ] `app/services/email_service.py` — Resend integration (verification + reset emails)
-- [ ] `app/api/v1/auth.py` additions — `POST /verify-email`, `POST /forgot-password`, `POST /reset-password`
-- [ ] Auth service additions: `verify_email`, `forgot_password`, `reset_password`
-- [ ] OAuth: `GET /auth/google`, `GET /auth/google/callback`
-- [ ] Test: email verification flow
-- [ ] Test: password reset flow (valid token, expired token, invalid token)
-- [ ] Test: OAuth login (mock external provider)
+- [x] `app/services/email_service.py` — Resend integration (verification + reset emails)
+- [x] `app/api/v1/auth.py` additions — `POST /verify-email`, `POST /forgot-password`, `POST /reset-password`
+- [x] Auth service additions: `verify_email`, `forgot_password`, `reset_password`
+- [x] OAuth: `GET /auth/google`, `GET /auth/google/callback`
+- [x] Test: email verification flow
+- [x] Test: password reset flow (valid token, expired token, invalid token)
+- [x] Test: OAuth login (mock external provider)
 
 **Done when**: Full auth lifecycle works — register, verify, login, refresh, forgot/reset password, Google OAuth.
 
