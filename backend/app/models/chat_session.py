@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,8 +24,8 @@ class ChatSession(Base):
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
     message_count: Mapped[int] = mapped_column(default=0)
     is_active: Mapped[bool] = mapped_column(default=True)
-    last_message_at: Mapped[datetime | None] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     agent: Mapped["Agent"] = relationship(back_populates="chat_sessions")  # noqa: F821
@@ -49,7 +49,7 @@ class ChatMessage(Base):
     tool_calls: Mapped[list | None] = mapped_column(JSONB)
     tool_results: Mapped[list | None] = mapped_column(JSONB)
     response_time_ms: Mapped[int | None] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     session: Mapped["ChatSession"] = relationship(back_populates="messages")

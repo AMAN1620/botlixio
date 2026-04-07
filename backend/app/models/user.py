@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, func
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,17 +29,17 @@ class User(Base):
     verification_token: Mapped[str | None] = mapped_column(String(255))
     # Required to enforce 24h expiry on email verification tokens.
     # Set at registration time: datetime.utcnow() + timedelta(hours=24)
-    verification_token_expires: Mapped[datetime | None] = mapped_column()
+    verification_token_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reset_token: Mapped[str | None] = mapped_column(String(255))
-    reset_token_expires: Mapped[datetime | None] = mapped_column()
+    reset_token_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Stores SHA-256 hash of the latest valid refresh token.
     # On refresh: incoming token hash must match this field.
     # Set to None on logout. Updated on every refresh.
     refresh_token_hash: Mapped[str | None] = mapped_column(String(64))
-    last_login_at: Mapped[datetime | None] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
     # Relationships
