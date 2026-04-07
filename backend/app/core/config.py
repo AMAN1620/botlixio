@@ -51,12 +51,27 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str = ""
     STRIPE_PUBLISHABLE_KEY: str = ""
 
-    # ── Email (Resend) ────────────────────────────
-    RESEND_API_KEY: str = ""
-    EMAIL_FROM: str = "noreply@botlixio.com"
+    # ── Email (SMTP) ──────────────────────────────
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAIL_FROM: str = ""
+
+    # ── OAuth (Google) ─────────────────────────────
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = ""
+
+    # ── Frontend ───────────────────────────────────
+    FRONTEND_URL: str = "http://localhost:3000"
 
     # ── Redis ─────────────────────────────────────
     REDIS_URL: str
+
+    # ── Qdrant (vector DB) ────────────────────────
+    QDRANT_URL: str = "http://localhost:6333"
+    QDRANT_COLLECTION_PREFIX: str = "agent"
 
     # ── Integration Encryption ────────────────────
     FERNET_KEY: str = ""

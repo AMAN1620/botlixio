@@ -68,3 +68,4 @@ backend/alembic/__pycache__/
 # ─── Uploads / media ──────────────────────────
 uploads/
 media/
+test_workflow/
