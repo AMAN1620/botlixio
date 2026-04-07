@@ -11,6 +11,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.enums import AuthProvider
 from app.models.user import User
 
 
@@ -31,6 +32,30 @@ class UserRepository:
         """Return a User by email (case-insensitive), or None."""
         result = await self._db.execute(
             select(User).where(User.email == email.lower().strip())
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_verification_token(self, token: str) -> User | None:
+        """Find user by verification_token. Returns None if not found."""
+        result = await self._db.execute(
+            select(User).where(User.verification_token == token)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_reset_token(self, token: str) -> User | None:
+        """Find user by reset_token. Returns None if not found."""
+        result = await self._db.execute(
+            select(User).where(User.reset_token == token)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_oauth_id(self, oauth_id: str, provider: AuthProvider) -> User | None:
+        """Find user by oauth_id + auth_provider. Returns None if not found."""
+        result = await self._db.execute(
+            select(User).where(
+                User.oauth_id == oauth_id,
+                User.auth_provider == provider,
+            )
         )
         return result.scalar_one_or_none()
 

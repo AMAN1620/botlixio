@@ -10,6 +10,7 @@ Functions:
 """
 
 import hashlib
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -112,3 +113,11 @@ def hash_refresh_token(token: str) -> str:
     (computationally hard to reverse), so slow bcrypt is unnecessary.
     """
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+# ── Token generation ────────────────────────────────────────────────────────
+
+
+def generate_token() -> str:
+    """Generate a cryptographically random 64-char hex token (32 bytes)."""
+    return secrets.token_hex(32)
