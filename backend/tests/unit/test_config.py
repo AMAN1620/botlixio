@@ -176,7 +176,7 @@ class TestDefaultValues:
         with patch.dict(os.environ, _make_env(), clear=True):
             from app.core.config import Settings
 
-            settings = Settings()
+            settings = Settings(_env_file=None)
             assert settings.EMAIL_FROM == "noreply@botlixio.com"
 
 

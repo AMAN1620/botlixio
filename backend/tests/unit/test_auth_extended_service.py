@@ -567,16 +567,15 @@ class TestEmailService:
     """SVC-EXT-022, SVC-EXT-023"""
 
     @pytest.mark.anyio
-    async def test_send_verification_email_calls_resend_api(  # SVC-EXT-022
+    async def test_send_verification_email_calls_smtp(  # SVC-EXT-022
         self,
     ) -> None:
         from app.services.email_service import EmailService
 
-        with patch("app.services.email_service.httpx.AsyncClient") as mock_client_cls:
-            mock_client = AsyncMock()
-            mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
-            mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-            mock_client.post.return_value = MagicMock(status_code=200)
+        with patch("app.services.email_service.smtplib.SMTP") as mock_smtp_cls:
+            mock_smtp = MagicMock()
+            mock_smtp_cls.return_value.__enter__ = MagicMock(return_value=mock_smtp)
+            mock_smtp_cls.return_value.__exit__ = MagicMock(return_value=False)
 
             service = EmailService()
             await service.send_verification_email(
@@ -585,24 +584,21 @@ class TestEmailService:
                 full_name="Test User",
             )
 
-            mock_client.post.assert_called_once()
-            call_args = mock_client.post.call_args
-            assert "https://api.resend.com/emails" in call_args.args[0]
-            payload = call_args.kwargs.get("json", {})
-            assert "user@example.com" in payload.get("to", [])
-            assert "abc123" in payload.get("html", "")
+            mock_smtp.sendmail.assert_called_once()
+            _, to_addr, msg_str = mock_smtp.sendmail.call_args.args
+            assert to_addr == "user@example.com"
+            assert "abc123" in msg_str
 
     @pytest.mark.anyio
-    async def test_send_password_reset_email_calls_resend_api(  # SVC-EXT-023
+    async def test_send_password_reset_email_calls_smtp(  # SVC-EXT-023
         self,
     ) -> None:
         from app.services.email_service import EmailService
 
-        with patch("app.services.email_service.httpx.AsyncClient") as mock_client_cls:
-            mock_client = AsyncMock()
-            mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
-            mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-            mock_client.post.return_value = MagicMock(status_code=200)
+        with patch("app.services.email_service.smtplib.SMTP") as mock_smtp_cls:
+            mock_smtp = MagicMock()
+            mock_smtp_cls.return_value.__enter__ = MagicMock(return_value=mock_smtp)
+            mock_smtp_cls.return_value.__exit__ = MagicMock(return_value=False)
 
             service = EmailService()
             await service.send_password_reset_email(
@@ -611,7 +607,7 @@ class TestEmailService:
                 full_name="Test User",
             )
 
-            mock_client.post.assert_called_once()
-            call_args = mock_client.post.call_args
-            payload = call_args.kwargs.get("json", {})
-            assert "reset123" in payload.get("html", "")
+            mock_smtp.sendmail.assert_called_once()
+            _, to_addr, msg_str = mock_smtp.sendmail.call_args.args
+            assert to_addr == "user@example.com"
+            assert "reset123" in msg_str

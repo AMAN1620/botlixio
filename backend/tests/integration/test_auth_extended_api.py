@@ -415,21 +415,23 @@ class TestAntiEnumerationTiming:
         # Register a known user
         await _register_user(client, "known@example.com")
 
-        # Time the known-email request
-        start_known = time.monotonic()
-        resp_known = await client.post(
-            f"{BASE}/forgot-password",
-            json={"email": "known@example.com"},
-        )
-        time_known = time.monotonic() - start_known
+        # Mock email sending so SMTP latency doesn't skew the timing comparison
+        with patch("app.services.email_service.EmailService.send_password_reset_email", new_callable=AsyncMock):
+            # Time the known-email request
+            start_known = time.monotonic()
+            resp_known = await client.post(
+                f"{BASE}/forgot-password",
+                json={"email": "known@example.com"},
+            )
+            time_known = time.monotonic() - start_known
 
-        # Time the unknown-email request
-        start_unknown = time.monotonic()
-        resp_unknown = await client.post(
-            f"{BASE}/forgot-password",
-            json={"email": "unknown@example.com"},
-        )
-        time_unknown = time.monotonic() - start_unknown
+            # Time the unknown-email request
+            start_unknown = time.monotonic()
+            resp_unknown = await client.post(
+                f"{BASE}/forgot-password",
+                json={"email": "unknown@example.com"},
+            )
+            time_unknown = time.monotonic() - start_unknown
 
         # Both must return 200 with identical body shape
         assert resp_known.status_code == 200
