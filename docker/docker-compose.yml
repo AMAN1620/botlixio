@@ -86,6 +86,7 @@ services:
     volumes:
       # Mount source for live reload in dev (remove in prod)
       - ../backend:/app
+      - arq_uploads:/tmp/botlixio_uploads   # shared temp dir for file uploads
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -93,7 +94,49 @@ services:
       start_period: 15s
       retries: 3
 
+  # ── WhatsApp Microservice ─────────────────────────────────
+  whatsapp_service:
+    build:
+      context: ../services/whatsapp
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - FASTAPI_URL=http://backend:8000
+      - INTERNAL_SECRET=${INTERNAL_SECRET}
+      - SESSIONS_DIR=/app/sessions
+    depends_on:
+      - redis
+    volumes:
+      - whatsapp_sessions:/app/sessions
+    restart: unless-stopped
+
+  # ── ARQ Background Worker ─────────────────────────────────
+  arq_worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: botlixio_arq_worker
+    restart: unless-stopped
+    command: arq arq_worker.WorkerSettings
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+      - arq_uploads:/tmp/botlixio_uploads   # same shared volume as backend
+
 volumes:
   postgres_data:
   redis_data:
   qdrant_data:
+  arq_uploads:
+  whatsapp_sessions:
