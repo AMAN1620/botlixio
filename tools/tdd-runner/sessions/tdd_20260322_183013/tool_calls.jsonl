@@ -1,0 +1,3 @@
+{"timestamp": "2026-03-22T18:30:18.806944+00:00", "event": "pre_tool_use", "tool": "toolu_01VDVikCjAAyaQL44yKxxiqr", "input_summary": "{'signal': None}"}
+{"timestamp": "2026-03-22T18:30:21.243393+00:00", "event": "pre_tool_use", "tool": "toolu_01Mbm2vdtoExfbK7GF7kch9q", "input_summary": "{'signal': None}"}
+{"timestamp": "2026-03-22T18:30:23.420702+00:00", "event": "pre_tool_use", "tool": "toolu_01FFp8x97hAfdqsJ8AJYXzBC", "input_summary": "{'signal': None}"}

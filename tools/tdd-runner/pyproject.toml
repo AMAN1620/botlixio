@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tdd-runner"
+version = "0.1.0"
+description = "TDD pipeline agent — Claude Agent SDK orchestrator for test-driven development"
+requires-python = ">=3.12"
+dependencies = [
+    "claude-agent-sdk",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+tdd-runner = "tdd_runner.main:main"
