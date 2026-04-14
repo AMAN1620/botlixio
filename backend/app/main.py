@@ -12,6 +12,7 @@ from app.api.v1 import auth as auth_router
 from app.api.v1 import agents as agents_router
 from app.api.v1 import knowledge as knowledge_router
 from app.api.v1 import chat as chat_router
+from app.api.v1.channels import router as channels_router
 
 
 def create_app() -> FastAPI:
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     app.include_router(agents_router.router, prefix="/api/v1")
     app.include_router(knowledge_router.router, prefix="/api/v1")
     app.include_router(chat_router.router, prefix="/api/v1")
+    app.include_router(channels_router, prefix="/api/v1")
 
     return app
 
