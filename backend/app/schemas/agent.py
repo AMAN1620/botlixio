@@ -5,15 +5,15 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.models.enums import AgentStatus, LLMProvider
+from app.models.enums import AgentStatus, AgentTone, LLMProvider
 
 
 class AgentCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
-    system_prompt: str = "You are a helpful customer support assistant."
+    tone: AgentTone = AgentTone.FRIENDLY
     welcome_message: str | None = "Hi! How can I help you today?"
-    fallback_message: str | None = "I'm sorry, I didn't understand that. Could you rephrase?"
+    fallback_message: str | None = "I'm sorry, I can't help with that right now. Please try again later."
     primary_color: str | None = Field(None, pattern=r"^#[0-9a-fA-F]{6}$")
     model: str = "gpt-4o-mini"
     temperature: float = Field(0.7, ge=0.0, le=2.0)
@@ -23,7 +23,7 @@ class AgentCreate(BaseModel):
 class AgentUpdate(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=255)
     description: str | None = None
-    system_prompt: str | None = None
+    tone: AgentTone | None = None
     welcome_message: str | None = None
     fallback_message: str | None = None
     primary_color: str | None = Field(None, pattern=r"^#[0-9a-fA-F]{6}$")
@@ -37,7 +37,7 @@ class AgentResponse(BaseModel):
     user_id: uuid.UUID
     name: str
     description: str | None
-    system_prompt: str
+    tone: AgentTone
     welcome_message: str | None
     fallback_message: str | None
     primary_color: str | None
