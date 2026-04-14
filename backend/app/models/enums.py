@@ -77,3 +77,18 @@ class ChannelType(str, enum.Enum):
     WHATSAPP = "whatsapp"
     DISCORD = "discord"
     SLACK = "slack"
+
+
+class IndexingStatus(str, enum.Enum):
+    PENDING    = "pending"     # added, not yet processed
+    PROCESSING = "processing"  # ARQ job running
+    INDEXED    = "indexed"     # chunks in Qdrant, ready
+    FAILED     = "failed"      # error during processing
+    STALE      = "stale"       # source changed, needs re-index
+
+
+class AgentTone(str, enum.Enum):
+    PROFESSIONAL = "professional"
+    FRIENDLY     = "friendly"
+    CASUAL       = "casual"
+    EMPATHETIC   = "empathetic"

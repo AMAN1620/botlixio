@@ -1,68 +1,103 @@
-"""Knowledge service — orchestrates ingestion: crawl/parse → chunk → embed → store."""
+"""Knowledge service — creates DB records and enqueues ARQ indexing jobs."""
 
+import os
 import uuid
 
-from fastapi import HTTPException, status, UploadFile
+from arq.connections import ArqRedis
+from fastapi import HTTPException, UploadFile, status
 
-from app.models.enums import KnowledgeSourceType
+from app.models.enums import IndexingStatus, KnowledgeSourceType
 from app.models.knowledge import AgentKnowledge
 from app.repositories.knowledge_repo import KnowledgeRepository
-from app.services.chunker import chunk_text
-from app.services.crawler import crawl_url
-from app.services.document_parser import parse_document
-from app.services.embedder import delete_source_vectors, embed_chunks, upsert_chunks
+from app.services.embedder import delete_source_vectors
+from app.workers.knowledge_worker import TEMP_UPLOAD_DIR
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 MAX_CHAR_COUNT = 100_000
 
 
-async def _embed_or_raise(chunks: list[str]) -> list[list[float]]:
-    """Wrap embed_chunks with a clear user-facing error."""
-    try:
-        return await embed_chunks(chunks)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Embedding failed — check your OPENAI_API_KEY and project model permissions: {e}",
-        )
-
-
 class KnowledgeService:
-    def __init__(self, repo: KnowledgeRepository) -> None:
+    def __init__(self, repo: KnowledgeRepository, arq: ArqRedis) -> None:
         self._repo = repo
+        self._arq = arq
 
-    async def add_url(self, *, agent_id: uuid.UUID, url: str) -> AgentKnowledge:
-        """Crawl a URL, chunk content, embed, store in Qdrant + DB."""
-        try:
-            text = await crawl_url(url)
-        except ValueError as e:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    # ─── URL source ──────────────────────────────────────────────────────────
 
-        text = text[:MAX_CHAR_COUNT]
-        chunks = chunk_text(text)
-        embeddings = await _embed_or_raise(chunks)
-
+    async def add_url(
+        self,
+        *,
+        agent_id: uuid.UUID,
+        root_url: str,
+        path_filter: str | None = None,
+        max_pages: int = 10,
+    ) -> AgentKnowledge:
+        """Create a PENDING knowledge record and enqueue crawl job."""
         item = await self._repo.create(
             agent_id=agent_id,
             source_type=KnowledgeSourceType.URL,
-            title=url,
-            content=text,
-            chunk_count=len(chunks),
+            title=root_url,
+            root_url=root_url,
+            path_filter=path_filter,
+            max_pages=max_pages,
         )
-
-        await upsert_chunks(
+        await self._arq.enqueue_job(
+            "index_url_source",
+            knowledge_id=str(item.id),
+            root_url=root_url,
+            path_filter=path_filter,
+            max_pages=max_pages,
             agent_id=str(agent_id),
-            source_id=str(item.id),
-            chunks=chunks,
-            embeddings=embeddings,
-            source_type="url",
-            source_title=url,
         )
-
         return item
 
-    async def add_document(self, *, agent_id: uuid.UUID, file: UploadFile) -> AgentKnowledge:
-        """Parse an uploaded file, chunk, embed, store."""
+    async def add_single_page(
+        self,
+        *,
+        knowledge_id: uuid.UUID,
+        agent_id: uuid.UUID,
+        page_url: str,
+    ) -> AgentKnowledge:
+        """Add a missing page to an existing URL source and enqueue a single-page crawl."""
+        item = await self._repo.get_by_id(knowledge_id)
+        if item is None or item.agent_id != agent_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
+        if item.source_type != KnowledgeSourceType.URL:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can only add pages to URL-type sources",
+            )
+        await self._arq.enqueue_job(
+            "index_single_page",
+            knowledge_id=str(knowledge_id),
+            page_url=page_url,
+            agent_id=str(agent_id),
+        )
+        return item
+
+    async def remove_crawled_page(
+        self,
+        *,
+        knowledge_id: uuid.UUID,
+        agent_id: uuid.UUID,
+        page_url: str,
+    ) -> AgentKnowledge:
+        """Remove a specific crawled page and delete its vectors from Qdrant."""
+        item = await self._repo.get_by_id(knowledge_id)
+        if item is None or item.agent_id != agent_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
+
+        # Delete vectors for this specific page (keyed as knowledge_id::page_url)
+        page_source_id = f"{knowledge_id}::{page_url}"
+        await delete_source_vectors(str(agent_id), page_source_id)
+
+        return await self._repo.remove_crawled_page(item, page_url)
+
+    # ─── File source ─────────────────────────────────────────────────────────
+
+    async def add_document(
+        self, *, agent_id: uuid.UUID, file: UploadFile
+    ) -> AgentKnowledge:
+        """Save uploaded file to temp storage, create PENDING record, enqueue parse job."""
         content = await file.read()
         if len(content) > MAX_FILE_SIZE:
             raise HTTPException(
@@ -71,40 +106,34 @@ class KnowledgeService:
             )
 
         filename = file.filename or "document"
-        text = parse_document(filename, content)
-        if not text.strip():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Could not extract text from file",
-            )
-
-        text = text[:MAX_CHAR_COUNT]
-        chunks = chunk_text(text)
-        embeddings = await _embed_or_raise(chunks)
-
         item = await self._repo.create(
             agent_id=agent_id,
             source_type=KnowledgeSourceType.FILE,
             title=filename,
-            content=text,
             file_name=filename,
             file_size=len(content),
-            chunk_count=len(chunks),
         )
 
-        await upsert_chunks(
+        # Save bytes to temp path so the worker can read them
+        os.makedirs(TEMP_UPLOAD_DIR, exist_ok=True)
+        temp_path = os.path.join(TEMP_UPLOAD_DIR, str(item.id))
+        with open(temp_path, "wb") as f:
+            f.write(content)
+
+        await self._arq.enqueue_job(
+            "index_file_source",
+            knowledge_id=str(item.id),
             agent_id=str(agent_id),
-            source_id=str(item.id),
-            chunks=chunks,
-            embeddings=embeddings,
-            source_type="file",
-            source_title=filename,
+            filename=filename,
         )
-
         return item
 
-    async def add_text(self, *, agent_id: uuid.UUID, title: str, content: str) -> AgentKnowledge:
-        """Ingest raw text content."""
+    # ─── Text source ─────────────────────────────────────────────────────────
+
+    async def add_text(
+        self, *, agent_id: uuid.UUID, title: str, content: str
+    ) -> AgentKnowledge:
+        """Enqueue text indexing job."""
         if not content.strip():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -112,35 +141,43 @@ class KnowledgeService:
             )
 
         content = content[:MAX_CHAR_COUNT]
-        chunks = chunk_text(content)
-        embeddings = await _embed_or_raise(chunks)
-
         item = await self._repo.create(
             agent_id=agent_id,
             source_type=KnowledgeSourceType.TEXT,
             title=title,
             content=content,
-            chunk_count=len(chunks),
         )
-
-        await upsert_chunks(
+        await self._arq.enqueue_job(
+            "index_text_source",
+            knowledge_id=str(item.id),
             agent_id=str(agent_id),
-            source_id=str(item.id),
-            chunks=chunks,
-            embeddings=embeddings,
-            source_type="text",
-            source_title=title,
+            text=content,
         )
+        return item
 
+    # ─── Read / delete ────────────────────────────────────────────────────────
+
+    async def get_status(
+        self, *, knowledge_id: uuid.UUID, agent_id: uuid.UUID
+    ) -> AgentKnowledge:
+        item = await self._repo.get_by_id(knowledge_id)
+        if item is None or item.agent_id != agent_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
         return item
 
     async def list_sources(self, *, agent_id: uuid.UUID) -> list[AgentKnowledge]:
         return await self._repo.get_by_agent(agent_id)
 
-    async def delete_source(self, *, source_id: uuid.UUID, agent_id: uuid.UUID) -> None:
+    async def delete_source(
+        self, *, source_id: uuid.UUID, agent_id: uuid.UUID
+    ) -> None:
         item = await self._repo.get_by_id(source_id)
         if item is None or item.agent_id != agent_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
 
-        await delete_source_vectors(str(agent_id), str(source_id))
+        await self._arq.enqueue_job(
+            "remove_source_vectors",
+            agent_id=str(agent_id),
+            source_id=str(source_id),
+        )
         await self._repo.delete(item)
