@@ -102,7 +102,7 @@ export default function AgentsPage() {
 
               <h3 className="font-bold text-slate-900">{agent.name}</h3>
               <p className="mt-1 text-sm text-slate-500 line-clamp-2">
-                {agent.description || agent.system_prompt}
+                {agent.description}
               </p>
 
               <div className="mt-4 flex items-center gap-4 text-xs text-slate-400">

@@ -44,8 +44,8 @@ function OverviewTab({ agent, onDeploy, onPause }: { agent: AgentResponse; onDep
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h3 className="mb-3 font-bold text-slate-900">System Prompt</h3>
-        <p className="text-sm leading-relaxed text-slate-600">{agent.system_prompt}</p>
+        <h3 className="mb-3 font-bold text-slate-900">Tone</h3>
+        <p className="text-sm leading-relaxed text-slate-600 capitalize">{agent.tone}</p>
       </div>
 
       <div className="flex gap-3">
@@ -92,7 +92,7 @@ function KnowledgeTab({ agentId }: { agentId: string }) {
     if (!url.trim()) return;
     setSubmitting(true);
     try {
-      await knowledgeApi.addUrl(agentId, url.trim());
+      await knowledgeApi.addUrl(agentId, { root_url: url.trim() });
       setUrl("");
       setActiveForm(null);
       await load();
